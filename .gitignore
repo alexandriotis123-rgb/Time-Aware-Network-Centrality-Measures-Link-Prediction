@@ -1,0 +1,22 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+
+# Output files
+outputs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large datasets
+data/
