@@ -73,13 +73,13 @@ DEBUG_MAX_CANDIDATE_EDGES = 200000
 
 RUN = {
     # Part 1
-    "network_evolution": True,
+    "network_evolution": False,
     # Centrality Measures
-    "degree": True,
-    "closeness": True,
-    "betweenness": True,
-    "eigenvector": True,
-    "katz": True,
+    "degree": False,
+    "closeness": False,
+    "betweenness": False,
+    "eigenvector": False,
+    "katz": False,
 }
 
 RUN_CANDIDATE_EDGES = False

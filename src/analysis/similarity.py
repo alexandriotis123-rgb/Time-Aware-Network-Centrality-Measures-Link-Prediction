@@ -6,7 +6,7 @@ import math
 import networkx as nx
 
 
-def shortest_path_similarity(graph, node_u, node_v):
+def shortest_path_similarity(graph, node_u, node_v, ignore_direct_edge=False):
     """Return the SNA shortest-path similarity ``1 / distance``.
 
     Disconnected pairs receive zero, as specified in ``SNA.pdf``.
@@ -15,10 +15,23 @@ def shortest_path_similarity(graph, node_u, node_v):
     if node_u == node_v:
         return 1.0
 
+    if node_u not in graph or node_v not in graph:
+        return 0.0
+
+    if ignore_direct_edge and graph.has_edge(node_u, node_v):
+        graph.remove_edge(node_u, node_v)
+        try:
+            distance = nx.shortest_path_length(graph, source=node_u, target=node_v)
+            return 1.0 / distance
+        except nx.NetworkXNoPath:
+            return 0.0
+        finally:
+            graph.add_edge(node_u, node_v)
+
     try:
         distance = nx.shortest_path_length(graph, source=node_u, target=node_v)
         return 1.0 / distance
-    except (nx.NetworkXNoPath, nx.NodeNotFound):
+    except nx.NetworkXNoPath:
         return 0.0
     
 def common_neighbors_similarity(graph, node_u, node_v):

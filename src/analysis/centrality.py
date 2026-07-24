@@ -195,7 +195,7 @@ def build_centrality_distributions(values_by_period, bins=30):
 
 
 def kl_divergence(distribution_p, distribution_q, epsilon=1e-4):
-    """Compute smoothed ``D_KL(P || Q)`` as specified in SNA.pdf."""
+    
 
     p = np.asarray(distribution_p, dtype=float) + epsilon
     q = np.asarray(distribution_q, dtype=float) + epsilon

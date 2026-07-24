@@ -248,15 +248,16 @@ def train_similarity_measure(
     dataset,
     candidate_edges,
     ground_truth_edges,
-    similarity_measure):
+    similarity_measure,
+    max_intervals=MAX_INTERVALS):
     
     ranges, accuracy, tpr, tnr, candidate_ranges = find_best_single_range(
         dataset,
         candidate_edges,
         ground_truth_edges,
         similarity_measure)
-    '''
-    ranges, accuracy,tpr, tnr, = improve_range_set(
+
+    ranges, accuracy, tpr, tnr = improve_range_set(
         dataset,
         candidate_edges,
         ground_truth_edges,
@@ -265,11 +266,10 @@ def train_similarity_measure(
         accuracy,
         tpr,
         tnr,
-        candidate_ranges)
-    print(f"\n=== {similarity_measure} ===")
-    print(f"Best ranges: {ranges}")
-    print(f"Best accuracy: {accuracy:.10f}")
-    '''
-    # Return candidate_ranges as well so callers can attempt
-    # to improve the range set using a validation partition.
+        candidate_ranges,
+        max_intervals=max_intervals)
+
+    print(f"\nFinal range set for {similarity_measure}: {ranges}")
+    print(f"Best accuracy: {accuracy:.4f}")
+
     return (ranges, accuracy, tpr, tnr, candidate_ranges)

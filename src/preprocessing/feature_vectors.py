@@ -10,14 +10,14 @@ from src.analysis.similarity import (
     preferential_attachment_similarity,)
 
 
-def build_feature_vectors(graph,candidate_edges):
+def build_feature_vectors(graph, candidate_edges, ignore_direct_edge=True):
     """
     Generate feature vectors for candidate edges.
     """
 
     for node_u, node_v in candidate_edges:
 
-        sp = shortest_path_similarity(graph,node_u,node_v)
+        sp = shortest_path_similarity(graph, node_u, node_v, ignore_direct_edge=ignore_direct_edge)
 
         cn = common_neighbors_similarity(graph,node_u,node_v)
 
