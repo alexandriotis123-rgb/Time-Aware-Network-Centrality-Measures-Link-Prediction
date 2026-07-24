@@ -13,8 +13,13 @@ optimized training algorithms.
 
 from src.utils.helpers import SIMILARITY_COLUMNS
 from src.prediction.evaluation import compute_accuracy
-from config import MAX_UNIQUE_SCORES
+from config import MAX_UNIQUE_SCORES, RANDOM_SEED
+from config import MAX_INTERVALS
 from collections import defaultdict
+import random
+
+MAX_TRAINING_RANGES = 1000
+MIN_IMPROVEMENT = 1e-4
 
 
 def generate_similarity_ranges(similarity_scores):
@@ -159,7 +164,8 @@ def improve_range_set(
     current_accuracy,
     current_tpr,
     current_tnr,
-    candidate_ranges):
+    candidate_ranges,
+    max_intervals=MAX_INTERVALS):
     """
     Improve a similarity range set by adding
     non-overlapping intervals.
@@ -168,57 +174,72 @@ def improve_range_set(
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
 
-    best_ranges = current_ranges
-    best_accuracy = current_accuracy
+    # We'll apply a greedy iterative strategy: at each step try to add the
+    # single non-overlapping candidate interval that gives the largest
+    # meaningful improvement on the validation set. Repeat until no
+    # candidate yields improvement > MIN_IMPROVEMENT.
 
+    best_ranges = list(current_ranges)
+    best_accuracy = current_accuracy
     best_tpr = current_tpr
     best_tnr = current_tnr
 
-    for candidate in candidate_ranges:
+    # Keep track of which candidates are still available (by index)
+    remaining_candidates = list(candidate_ranges)
 
-        candidate_interval = candidate[0]
+    # Stop when no candidate gives meaningful improvement or when we've
+    # reached the configured maximum number of intervals.
+    while True:
+        found_improvement = False
+        best_step = None
+        best_step_accuracy = best_accuracy
+        best_step_tpr = best_tpr
+        best_step_tnr = best_tnr
 
-        overlap = False
+        for candidate in remaining_candidates:
 
-        for interval in current_ranges:
-            if overlaps(candidate_interval,interval):
-                overlap = True
-                break
-        if overlap:
-            continue
+            candidate_interval = candidate[0]
 
-        new_ranges = sorted(
-            current_ranges + candidate,
-            key=lambda interval: interval[0])
+            # skip overlapping candidates
+            if any(overlaps(candidate_interval, interval) for interval in best_ranges):
+                continue
 
-        accuracy,tpr,tnr = compute_accuracy(
-            dataset,
-            similarity_index,
-            new_ranges,
-            ground_truth_edges,
-            candidate_edges)
-        
-        improvement = accuracy - best_accuracy
+            new_ranges = sorted(best_ranges + [candidate_interval], key=lambda interval: interval[0])
 
-        if improvement > 0:
-            print(
-                f"Candidate {new_ranges} "
-                f"improves ACC by {improvement:.10f}")
+            accuracy, tpr, tnr = compute_accuracy(
+                dataset,
+                similarity_index,
+                new_ranges,
+                ground_truth_edges,
+                candidate_edges)
 
-        if accuracy > best_accuracy:
-            print("Improvement found")
-            print(f"Previous ranges: {best_ranges}")
-            print(f"Candidate ranges: {new_ranges}")
-            print(f"ACC: {best_accuracy:.6f} -> {accuracy:.6f}")
+            improvement = accuracy - best_accuracy
 
+            if improvement > MIN_IMPROVEMENT and accuracy > best_step_accuracy:
+                best_step = candidate_interval
+                best_step_accuracy = accuracy
+                best_step_tpr = tpr
+                best_step_tnr = tnr
+                found_improvement = True
 
-            best_accuracy = accuracy
-            best_ranges = new_ranges
-            best_tpr = tpr
-            best_tnr = tnr
-            
+        if not found_improvement:
+            break
 
-    return (best_ranges,best_accuracy,best_tpr,best_tnr)
+        # Accept the best step and continue
+        best_ranges = sorted(best_ranges + [best_step], key=lambda interval: interval[0])
+        best_accuracy = best_step_accuracy
+        best_tpr = best_step_tpr
+        best_tnr = best_step_tnr
+
+        print(f"Added interval {best_step} -> ACC={best_accuracy:.4f} | intervals={len(best_ranges)}")
+
+        # If we've reached the maximum allowed intervals, stop
+        if len(best_ranges) >= max_intervals:
+            break
+        # Remove any candidates that now overlap with the updated best_ranges
+        remaining_candidates = [c for c in remaining_candidates if not any(overlaps(c[0], r) for r in best_ranges)]
+
+    return (best_ranges, best_accuracy, best_tpr, best_tnr)
 
 
 def train_similarity_measure(
@@ -247,24 +268,6 @@ def train_similarity_measure(
     print(f"Best ranges: {ranges}")
     print(f"Best accuracy: {accuracy:.10f}")
     '''
-    improved = True
-
-    while improved:
-
-        previous_accuracy = accuracy
-
-        ranges, accuracy, tpr, tnr = improve_range_set(
-            dataset,
-            candidate_edges,
-            ground_truth_edges,
-            similarity_measure,
-            ranges,
-            accuracy,
-            tpr,
-            tnr,
-            candidate_ranges)
-
-        improved = accuracy > previous_accuracy
-        print(f"Current ranges: {ranges}")
-        print(f"ACC={accuracy:.4f}")
-    return (ranges,accuracy,tpr, tnr,)
+    # Return candidate_ranges as well so callers can attempt
+    # to improve the range set using a validation partition.
+    return (ranges, accuracy, tpr, tnr, candidate_ranges)

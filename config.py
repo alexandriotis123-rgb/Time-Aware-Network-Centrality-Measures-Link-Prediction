@@ -61,9 +61,11 @@ EPSILON = 1e-10
 DEBUG_MODE = True
 
 DEBUG_MAX_ROWS = 500000
+DEBUG_MAX_CANDIDATE_EDGES = 600000
 
- #DEBUG_MODE = False
- #DEBUG_MAX_ROWS = None   
+#DEBUG_MODE = False
+#DEBUG_MAX_ROWS = None
+#DEBUG_MAX_CANDIDATE_EDGES = None
 
 # ==========================================================
 # Execution Controller
@@ -88,3 +90,7 @@ RUN_TRAINING_EXPERIMENT = True
 
 # Training
 MAX_UNIQUE_SCORES = 50
+# Holdout test ratio when creating train/validation/test splits
+TEST_HOLDOUT_RATIO = 0.2
+# Max number of non-overlapping intervals to accept per similarity measure
+MAX_INTERVALS = 3
