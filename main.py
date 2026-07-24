@@ -1,5 +1,10 @@
+import contextlib
+import os
+import sys
+
 from config import (DATASET_FILE,
                     NUMBER_OF_PERIODS,
+                    OUTPUT_FOLDER,
                     RUN,
                     RUN_CANDIDATE_EDGES,
                     RUN_FEATURE_VECTORS,
@@ -25,8 +30,32 @@ from src.preprocessing.dataset import build_dataset
 from src.prediction.experiment import run_training_experiment
 
 
+class Tee:
+    def __init__(self, *streams):
+        self.streams = streams
 
-def main():
+    def write(self, data):
+        for stream in self.streams:
+            stream.write(data)
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
+
+
+def main(log_output_path=None):
+    if log_output_path is None:
+        log_output_path = os.path.join(OUTPUT_FOLDER, "main_output.log")
+
+    os.makedirs(os.path.dirname(log_output_path), exist_ok=True)
+
+    with open(log_output_path, "w", encoding="utf-8") as log_file:
+        with contextlib.redirect_stdout(Tee(sys.stdout, log_file)):
+            _run_main()
+            print(f"\nTerminal output also saved to {log_output_path}")
+
+
+def _run_main():
 
     df = load_dataset(DATASET_FILE)
 

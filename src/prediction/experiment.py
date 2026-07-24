@@ -29,13 +29,11 @@ def evaluate_similarity_measures(
     val_dataset,
     train_candidates,
     val_candidates,
-    graph_edges,
     ground_truth_remaining,
-    ground_truth_test,
 ):
     """
     Train every similarity measure and store
-    its optimal ranges and training accuracy.
+    its optimal ranges and validation accuracy.
     """
 
     results = {}
@@ -45,23 +43,33 @@ def evaluate_similarity_measures(
         start = time.perf_counter()
 
         # Train on the training partition
-        ranges, accuracy, tpr, tnr, candidate_ranges = train_similarity_measure(
+        ranges, train_acc, train_tpr, train_tnr, candidate_ranges = train_similarity_measure(
             train_dataset,
             train_candidates,
             ground_truth_remaining,
             similarity_measure,
         )
 
+        # Compute the validation baseline for the starting range set
+        similarity_index = SIMILARITY_COLUMNS[similarity_measure]
+        val_acc, val_tpr, val_tnr = compute_accuracy(
+            val_dataset,
+            similarity_index,
+            ranges,
+            ground_truth_remaining,
+            val_candidates,
+        )
+
         # Attempt to improve the ranges using the validation partition
-        improved_ranges, improved_acc, improved_tpr, improved_tnr = improve_range_set(
+        improved_ranges, val_acc, val_tpr, val_tnr = improve_range_set(
             val_dataset,
             val_candidates,
             ground_truth_remaining,
             similarity_measure,
             ranges,
-            accuracy,
-            tpr,
-            tnr,
+            val_acc,
+            val_tpr,
+            val_tnr,
             candidate_ranges,
         )
 
@@ -69,16 +77,19 @@ def evaluate_similarity_measures(
 
         print(
             f"{similarity_measure:<4} | "
-            f"ACC={improved_acc:.4f} | "
-            f"TPR={improved_tpr:.4f} | "
-            f"TNR={improved_tnr:.4f} | "
+            f"VAL_ACC={val_acc:.4f} | "
+            f"VAL_TPR={val_tpr:.4f} | "
+            f"VAL_TNR={val_tnr:.4f} | "
             f"time={elapsed:.2f}s")
 
         results[similarity_measure] = {
             "ranges": improved_ranges,
-            "accuracy": improved_acc,
-            "tpr": improved_tpr,
-            "tnr": improved_tnr,
+            "train_accuracy": train_acc,
+            "train_tpr": train_tpr,
+            "train_tnr": train_tnr,
+            "validation_accuracy": val_acc,
+            "validation_tpr": val_tpr,
+            "validation_tnr": val_tnr,
         }
 
     return results
@@ -86,8 +97,7 @@ def evaluate_similarity_measures(
 
 def rank_similarity_measures(results):
     """
-    Rank similarity measures according to
-    their prediction accuracy.
+    Rank similarity measures according to holdout test accuracy.
     """
 
     ranking = sorted(
@@ -177,15 +187,13 @@ def run_training_experiment(persistent_pairs,persistent_node_sets):
         print(f"Test candidates (holdout): {len(test_candidates):,}")
 
         graph_edges = {tuple(sorted(edge)) for edge in graph_2.edges()}
-        candidate_edge_set_full = {tuple(sorted(edge)) for edge in candidate_list}
-        ground_truth_full = graph_edges.intersection(candidate_edge_set_full)
 
         # ground truth for test and remaining partitions
         test_candidate_set = {tuple(sorted(edge)) for edge in test_candidates}
-        remaining_candidate_set = {tuple(sorted(edge)) for edge in remaining_candidates}
 
         ground_truth_test = graph_edges.intersection(test_candidate_set)
-        ground_truth_remaining = graph_edges.intersection(remaining_candidate_set)
+        ground_truth_remaining = graph_edges.intersection(
+            tuple(sorted(edge)) for edge in remaining_candidates)
 
         # Balance only the remaining (non-test) candidates and then split into train/val
         balanced_candidate_edges = balance_candidate_edges(
@@ -215,9 +223,7 @@ def run_training_experiment(persistent_pairs,persistent_node_sets):
             val_dataset,
             train_candidates,
             val_candidates,
-            graph_edges,
             ground_truth_remaining,
-            ground_truth_test,
         )
 
         # Final evaluation on the holdout test set using the improved ranges
@@ -231,11 +237,19 @@ def run_training_experiment(persistent_pairs,persistent_node_sets):
                 info["ranges"],
             )
 
-        ranking = rank_similarity_measures(results)
-        print("\nRanking")
+        print("\nValidation scores")
+        for measure, info in results.items():
+            print(
+                f"{measure:<4} "
+                f"VAL_ACC={info['validation_accuracy']:.4f} "
+                f"VAL_TPR={info['validation_tpr']:.4f} "
+                f"VAL_TNR={info['validation_tnr']:.4f}")
+
+        ranking = rank_similarity_measures(full_evaluation)
+        print("\nHoldout test ranking")
 
         for position, (measure, info) in enumerate(ranking, start=1):
-            evaluation_info = full_evaluation[measure]
+            evaluation_info = info
             print(
                 f"{position}. "
                 f"{measure:<4} "

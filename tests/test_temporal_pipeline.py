@@ -40,3 +40,21 @@ def test_build_dataset_uses_new_links_as_positive_labels():
     labels = [row[-1] for row in dataset]
 
     assert labels == [0, 1]
+
+
+def test_build_candidate_edges_respects_max_candidates_and_excludes_existing_edges():
+    graph = nx.Graph()
+    graph.add_edge(1, 2)
+    graph.add_edge(3, 4)
+
+    candidate_edges = build_candidate_edges(
+        [1, 2, 3, 4],
+        existing_edges=graph.edges(),
+        max_candidates=2,
+        seed=42,
+    )
+
+    assert len(candidate_edges) == 2
+    assert (1, 2) not in candidate_edges
+    assert (3, 4) not in candidate_edges
+    assert all(edge == tuple(sorted(edge)) for edge in candidate_edges)

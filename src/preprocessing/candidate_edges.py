@@ -23,19 +23,32 @@ def build_candidate_edges(
     """
 
     node_list = sorted(persistent_nodes)
-    candidate_edges = [
-        _canonical_edge(edge)
-        for edge in combinations(node_list, 2)
-    ]
+    existing_edge_set = {
+        _canonical_edge(edge) for edge in existing_edges
+    } if existing_edges is not None else set()
 
-    if existing_edges is not None:
-        existing_edge_set = {_canonical_edge(edge) for edge in existing_edges}
-        candidate_edges = [
-            edge for edge in candidate_edges if edge not in existing_edge_set
+    if max_candidates is None:
+        return [
+            _canonical_edge(edge)
+            for edge in combinations(node_list, 2)
+            if _canonical_edge(edge) not in existing_edge_set
         ]
 
-    if max_candidates is not None and len(candidate_edges) > max_candidates:
-        rng = random.Random(seed)
-        candidate_edges = rng.sample(candidate_edges, max_candidates)
+    rng = random.Random(seed)
+    reservoir = []
+    total = 0
 
-    return candidate_edges
+    for edge in combinations(node_list, 2):
+        canonical_edge = _canonical_edge(edge)
+        if canonical_edge in existing_edge_set:
+            continue
+
+        total += 1
+        if len(reservoir) < max_candidates:
+            reservoir.append(canonical_edge)
+        else:
+            j = rng.randrange(total)
+            if j < max_candidates:
+                reservoir[j] = canonical_edge
+
+    return reservoir

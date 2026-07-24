@@ -12,13 +12,11 @@ optimized training algorithms.
 
 
 from src.utils.helpers import SIMILARITY_COLUMNS
-from src.prediction.evaluation import compute_accuracy
-from config import MAX_UNIQUE_SCORES, RANDOM_SEED
+from src.prediction.evaluation import compute_accuracy, compute_lambda
+from config import MAX_UNIQUE_SCORES
 from config import MAX_INTERVALS
 from collections import defaultdict
-import random
 
-MAX_TRAINING_RANGES = 1000
 MIN_IMPROVEMENT = 1e-4
 
 
@@ -140,7 +138,7 @@ def find_best_single_range(
     print(f"Ground truth: {len(ground_truth_edges)}")
     print(f"Best ranges: {best_ranges}")
     print(f"ACC={best_accuracy:.4f}  TPR={best_tpr:.4f}  TNR={best_tnr:.4f}")
-    print(f"lambda={len(ground_truth_edges)/len(candidate_edges):.4f}")
+    print(f"lambda={compute_lambda(ground_truth_edges, candidate_edges):.4f}")
 
     return ( best_ranges,best_accuracy,best_tpr,best_tnr,candidate_ranges)
 
@@ -173,18 +171,19 @@ def improve_range_set(
 
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
-
-    # We'll apply a greedy iterative strategy: at each step try to add the
-    # single non-overlapping candidate interval that gives the largest
-    # meaningful improvement on the validation set. Repeat until no
-    # candidate yields improvement > MIN_IMPROVEMENT.
+    # Evaluate the current ranges on the validation dataset first, so the
+    # improvement threshold is compared consistently on validation.
+    best_accuracy, best_tpr, best_tnr = compute_accuracy(
+        dataset,
+        similarity_index,
+        current_ranges,
+        ground_truth_edges,
+        candidate_edges,
+    )
 
     best_ranges = list(current_ranges)
-    best_accuracy = current_accuracy
-    best_tpr = current_tpr
-    best_tnr = current_tnr
 
-    # Keep track of which candidates are still available (by index)
+    # Keep track of which candidates are still available
     remaining_candidates = list(candidate_ranges)
 
     # Stop when no candidate gives meaningful improvement or when we've
@@ -197,10 +196,8 @@ def improve_range_set(
         best_step_tnr = best_tnr
 
         for candidate in remaining_candidates:
-
             candidate_interval = candidate[0]
 
-            # skip overlapping candidates
             if any(overlaps(candidate_interval, interval) for interval in best_ranges):
                 continue
 
@@ -211,7 +208,8 @@ def improve_range_set(
                 similarity_index,
                 new_ranges,
                 ground_truth_edges,
-                candidate_edges)
+                candidate_edges,
+            )
 
             improvement = accuracy - best_accuracy
 
@@ -225,7 +223,6 @@ def improve_range_set(
         if not found_improvement:
             break
 
-        # Accept the best step and continue
         best_ranges = sorted(best_ranges + [best_step], key=lambda interval: interval[0])
         best_accuracy = best_step_accuracy
         best_tpr = best_step_tpr
@@ -233,11 +230,13 @@ def improve_range_set(
 
         print(f"Added interval {best_step} -> ACC={best_accuracy:.4f} | intervals={len(best_ranges)}")
 
-        # If we've reached the maximum allowed intervals, stop
         if len(best_ranges) >= max_intervals:
             break
-        # Remove any candidates that now overlap with the updated best_ranges
-        remaining_candidates = [c for c in remaining_candidates if not any(overlaps(c[0], r) for r in best_ranges)]
+
+        remaining_candidates = [
+            c for c in remaining_candidates
+            if not any(overlaps(c[0], r) for r in best_ranges)
+        ]
 
     return (best_ranges, best_accuracy, best_tpr, best_tnr)
 
@@ -248,7 +247,7 @@ def train_similarity_measure(
     ground_truth_edges,
     similarity_measure):
     
-    ranges, accuracy,tpr, tnr,candidate_ranges = find_best_single_range(
+    ranges, accuracy, tpr, tnr, candidate_ranges = find_best_single_range(
         dataset,
         candidate_edges,
         ground_truth_edges,
