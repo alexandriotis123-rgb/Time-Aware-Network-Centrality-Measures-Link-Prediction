@@ -34,21 +34,42 @@ def build_candidate_edges(
             if _canonical_edge(edge) not in existing_edge_set
         ]
 
+    if max_candidates <= 0:
+        return []
+
     rng = random.Random(seed)
     reservoir = []
-    total = 0
+    seen_edges = set()
+    max_attempts = max(max_candidates * 25, 1000)
+    attempts = 0
 
-    for edge in combinations(node_list, 2):
-        canonical_edge = _canonical_edge(edge)
-        if canonical_edge in existing_edge_set:
+    while len(reservoir) < max_candidates and attempts < max_attempts:
+        attempts += 1
+
+        u = rng.choice(node_list)
+        v = rng.choice(node_list)
+
+        if u == v:
             continue
 
-        total += 1
-        if len(reservoir) < max_candidates:
+        canonical_edge = _canonical_edge((u, v))
+
+        if canonical_edge in existing_edge_set or canonical_edge in seen_edges:
+            continue
+
+        reservoir.append(canonical_edge)
+        seen_edges.add(canonical_edge)
+
+    if len(reservoir) < max_candidates:
+        for edge in combinations(node_list, 2):
+            canonical_edge = _canonical_edge(edge)
+            if canonical_edge in existing_edge_set or canonical_edge in seen_edges:
+                continue
+
             reservoir.append(canonical_edge)
-        else:
-            j = rng.randrange(total)
-            if j < max_candidates:
-                reservoir[j] = canonical_edge
+            seen_edges.add(canonical_edge)
+
+            if len(reservoir) >= max_candidates:
+                break
 
     return reservoir

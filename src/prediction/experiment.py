@@ -7,7 +7,10 @@ PART III - Questions 2 & 3
 import time
 
 from config import DEBUG_MODE, DEBUG_MAX_CANDIDATE_EDGES, RANDOM_SEED, TEST_HOLDOUT_RATIO
-from src.preprocessing.balanced_dataset import (balance_candidate_edges)
+from src.preprocessing.balanced_dataset import (
+    balance_candidate_edges,
+    split_candidate_edges_stratified,
+)
 
 from src.utils.helpers import SIMILARITY_COLUMNS, SIMILARITY_MEASURES
 from src.prediction.training import (
@@ -202,12 +205,13 @@ def run_training_experiment(persistent_pairs,persistent_node_sets):
 
         print(f"Balanced candidate edges (train+val pool): {len(balanced_candidate_edges):,}")
 
-        # Split balanced pool into train/validation (reproducible)
-        rnd.shuffle(balanced_candidate_edges)
-        val_ratio = 0.2
-        val_size = int(len(balanced_candidate_edges) * val_ratio)
-        val_candidates = balanced_candidate_edges[:val_size]
-        train_candidates = balanced_candidate_edges[val_size:]
+        # Split balanced pool into train/validation (reproducible) while preserving class balance.
+        train_candidates, val_candidates = split_candidate_edges_stratified(
+            balanced_candidate_edges,
+            ground_truth_remaining,
+            val_ratio=0.2,
+            seed=RANDOM_SEED + pair_index,
+        )
 
         print(f"Train candidates: {len(train_candidates):,} | Validation candidates: {len(val_candidates):,}")
 

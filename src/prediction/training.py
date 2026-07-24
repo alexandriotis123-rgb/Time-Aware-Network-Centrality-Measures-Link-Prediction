@@ -12,7 +12,7 @@ optimized training algorithms.
 
 
 from src.utils.helpers import SIMILARITY_COLUMNS
-from src.prediction.evaluation import compute_accuracy, compute_lambda
+from src.prediction.evaluation import compute_accuracy, compute_balanced_accuracy, compute_lambda
 from config import MAX_UNIQUE_SCORES
 from config import MAX_INTERVALS
 from collections import defaultdict
@@ -112,7 +112,7 @@ def find_best_single_range(
 
     for similarity_ranges in candidate_ranges:
 
-        accuracy,tpr,tnr = compute_accuracy(
+        accuracy, tpr, tnr = compute_balanced_accuracy(
             dataset,
             similarity_index,
             similarity_ranges,
@@ -137,7 +137,7 @@ def find_best_single_range(
     print(f"Candidate edges: {len(candidate_edges)}")
     print(f"Ground truth: {len(ground_truth_edges)}")
     print(f"Best ranges: {best_ranges}")
-    print(f"ACC={best_accuracy:.4f}  TPR={best_tpr:.4f}  TNR={best_tnr:.4f}")
+    print(f"BAL_ACC={best_accuracy:.4f}  TPR={best_tpr:.4f}  TNR={best_tnr:.4f}")
     print(f"lambda={compute_lambda(ground_truth_edges, candidate_edges):.4f}")
 
     return ( best_ranges,best_accuracy,best_tpr,best_tnr,candidate_ranges)
@@ -173,7 +173,7 @@ def improve_range_set(
 
     # Evaluate the current ranges on the validation dataset first, so the
     # improvement threshold is compared consistently on validation.
-    best_accuracy, best_tpr, best_tnr = compute_accuracy(
+    best_accuracy, best_tpr, best_tnr = compute_balanced_accuracy(
         dataset,
         similarity_index,
         current_ranges,
@@ -203,7 +203,7 @@ def improve_range_set(
 
             new_ranges = sorted(best_ranges + [candidate_interval], key=lambda interval: interval[0])
 
-            accuracy, tpr, tnr = compute_accuracy(
+            accuracy, tpr, tnr = compute_balanced_accuracy(
                 dataset,
                 similarity_index,
                 new_ranges,
@@ -228,7 +228,7 @@ def improve_range_set(
         best_tpr = best_step_tpr
         best_tnr = best_step_tnr
 
-        print(f"Added interval {best_step} -> ACC={best_accuracy:.4f} | intervals={len(best_ranges)}")
+        print(f"Added interval {best_step} -> BAL_ACC={best_accuracy:.4f} | intervals={len(best_ranges)}")
 
         if len(best_ranges) >= max_intervals:
             break
