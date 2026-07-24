@@ -39,17 +39,27 @@ The implemented similarity definitions are:
 
 ## Verification
 
-The recorded Pair 1 values below predate the final self-link filtering change
-and must be regenerated before they are used in the report:
+The final self-loop-free debug run completed all nine temporal pairs without
+errors. Aggregate results are:
 
-- 12,262 training positives and 12,262 training negatives;
-- 6,592 temporal-test positives and 6,592 temporal-test negatives;
-- disjoint training/test negative sets;
-- best temporal-test result: PA, balanced accuracy 0.6672.
+| Measure | Mean train BAL_ACC | Mean test BAL_ACC | Mean test TPR | Mean test TNR |
+|---|---:|---:|---:|---:|
+| PA | **0.8017** | **0.6944** | 0.5930 | 0.7958 |
+| GD | 0.7494 | 0.6769 | **0.6866** | 0.6671 |
+| CN | 0.6588 | 0.5962 | 0.2469 | 0.9454 |
+| JC | 0.6581 | 0.5952 | 0.2431 | 0.9474 |
+| AA | 0.6135 | 0.5663 | 0.1540 | **0.9785** |
 
-The complete `outputs/main_output.log` should be regenerated after these
-changes; an older log contains results from the superseded imbalanced
-holdout protocol and must not be used in the final evaluation.
+PA ranked first in all nine pairs. No learned classifier exceeded the
+three-interval limit. The final GD ranges are `0.5` for Pair 1 and
+`[1/3, 1/2]` for Pairs 2–9.
+
+All 57 required figure artifacts are present: 50 temporal centrality
+histograms, five KL plots, the network-evolution plot, and the
+persistent-volume plot. Five KL CSV files are also available.
+
+The run uses the first 500,000 of 63,497,050 rows. This sampling decision and
+the `k=500` betweenness approximation must be disclosed in the final report.
 
 Run:
 
