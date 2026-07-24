@@ -6,6 +6,8 @@ The implementation is now aligned with the assignment and the clarifications
 in `SNA.pdf`:
 
 - The temporal network is divided into ten non-overlapping periods.
+- Self-links are removed because social-link prediction is defined between
+  distinct users; this also prevents trivial GD scores of `1.0`.
 - Persistent nodes and restricted edge sets are constructed for every pair of
   consecutive periods.
 - Degree, closeness, approximate betweenness, eigenvector, and Katz
@@ -25,9 +27,10 @@ in `SNA.pdf`:
 - Output directories are created automatically, figures are closed after
   saving, and small or empty graphs are handled safely.
 
-## Main findings
+## Previous findings (regeneration required)
 
-All nine temporal graph pairs completed without errors. Mean results were:
+The following values came from the run before self-links were removed. They
+must be replaced after rerunning the corrected implementation:
 
 | Measure | Mean training accuracy | Mean temporal-test accuracy |
 |---|---:|---:|
@@ -85,4 +88,3 @@ git diff --cached
 git commit -m "Align temporal analysis and link prediction with assignment"
 git push
 ```
-

@@ -39,7 +39,8 @@ The implemented similarity definitions are:
 
 ## Verification
 
-The corrected real-data Pair 1 run (500,000-row debug dataset) produced:
+The recorded Pair 1 values below predate the final self-link filtering change
+and must be regenerated before they are used in the report:
 
 - 12,262 training positives and 12,262 training negatives;
 - 6,592 temporal-test positives and 6,592 temporal-test negatives;

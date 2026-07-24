@@ -101,6 +101,11 @@ def partition_temporal_network(
             create_using=nx.Graph()
         )
 
+        # A user cannot form a social link with itself. Self-loops also make
+        # shortest-path similarity trivially equal to one and distort degree-
+        # based measures, so exclude them from every temporal graph.
+        graph.remove_edges_from(nx.selfloop_edges(graph))
+
         subgraphs.append(graph)
 
     return time_points, time_periods, subgraphs

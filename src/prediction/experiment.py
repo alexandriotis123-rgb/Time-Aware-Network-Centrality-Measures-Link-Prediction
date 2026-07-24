@@ -32,11 +32,12 @@ from src.preprocessing.dataset import build_dataset
 
 
 def _canonical_edge_set(edges):
-    """Return canonical undirected edge tuples."""
+    """Return canonical, non-self, undirected edge tuples."""
 
     return {
         (u, v) if u <= v else (v, u)
         for u, v in edges
+        if u != v
     }
 
 

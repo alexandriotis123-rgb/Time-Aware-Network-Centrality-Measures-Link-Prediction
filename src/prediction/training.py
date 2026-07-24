@@ -172,6 +172,9 @@ def improve_range_set(
     non-overlapping intervals.
     """
 
+    if max_intervals < 1:
+        raise ValueError("max_intervals must be at least 1.")
+
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
     # Evaluate the current ranges on the validation dataset first, so the
@@ -186,12 +189,23 @@ def improve_range_set(
 
     best_ranges = list(current_ranges)
 
+    if len(best_ranges) > max_intervals:
+        raise ValueError(
+            "The current range set already exceeds max_intervals."
+        )
+
+    # This matters when a multi-interval range learned on training is passed
+    # to validation. Do not add a fourth interval to an existing three-range
+    # classifier when MAX_INTERVALS is three.
+    if len(best_ranges) == max_intervals:
+        return (best_ranges, best_accuracy, best_tpr, best_tnr)
+
     # Keep track of which candidates are still available
     remaining_candidates = list(candidate_ranges)
 
     # Stop when no candidate gives meaningful improvement or when we've
     # reached the configured maximum number of intervals.
-    while True:
+    while len(best_ranges) < max_intervals:
         found_improvement = False
         best_step = None
         best_step_accuracy = best_accuracy
