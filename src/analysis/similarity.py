@@ -7,20 +7,19 @@ import networkx as nx
 
 
 def shortest_path_similarity(graph, node_u, node_v):
-    """Return a score based on shortest path distance.
+    """Return the SNA shortest-path similarity ``1 / distance``.
 
-    Connected pairs receive a negative distance, while disconnected pairs
-    receive -inf so they are ranked below all finite distances.
+    Disconnected pairs receive zero, as specified in ``SNA.pdf``.
     """
 
     if node_u == node_v:
-        return 0
+        return 1.0
 
     try:
         distance = nx.shortest_path_length(graph, source=node_u, target=node_v)
-        return -distance
+        return 1.0 / distance
     except (nx.NetworkXNoPath, nx.NodeNotFound):
-        return float("-inf")
+        return 0.0
     
 def common_neighbors_similarity(graph, node_u, node_v):
     """Compute the Common Neighbors similarity between two nodes."""
@@ -70,7 +69,7 @@ def adamic_adar_similarity(graph, node_u, node_v):
         degree = graph.degree(neighbor)
 
         if degree > 1:
-            similarity += 1 / math.log(degree)
+            similarity += 1 / math.log2(degree)
 
     return similarity
 

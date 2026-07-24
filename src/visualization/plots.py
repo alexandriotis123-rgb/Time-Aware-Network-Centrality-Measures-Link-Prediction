@@ -3,7 +3,22 @@ PART I - Question 2
 Visualization functions.
 """
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+
+from config import FIGURE_DPI, FIGURES_FOLDER, SAVE_FIGURES
+
+
+def _finish_figure(filename):
+    """Save a figure when configured and always release its resources."""
+
+    if SAVE_FIGURES:
+        output_path = Path(FIGURES_FOLDER) / filename
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=FIGURE_DPI)
+
+    plt.close()
 
 
 def plot_network_evolution(subgraphs):
@@ -69,16 +84,16 @@ def plot_network_evolution(subgraphs):
 
     plt.tight_layout()
 
-    plt.savefig("outputs/figures/network_evolution.png")
-
-    plt.show()
+    _finish_figure("network_evolution.png")
 
 
 def plot_centrality_histogram(
     values,
     title,
     filename,
-    log_scale=False):
+    log_scale=False,
+    bins=30,
+):
     """
     Plot the probability density histogram
     of a centrality measure.
@@ -88,7 +103,7 @@ def plot_centrality_histogram(
 
     plt.hist(
         values,
-        bins=30,
+        bins=bins,
         density=True,
         edgecolor="black"
     )
@@ -108,9 +123,28 @@ def plot_centrality_histogram(
 
     plt.tight_layout()
 
-    plt.savefig(f"outputs/figures/{filename}")
+    _finish_figure(filename)
 
-    plt.show()
+
+def plot_kl_divergence(kl_values, centrality_name):
+    """Plot KL divergence between consecutive temporal distributions."""
+
+    pairs = list(range(1, len(kl_values) + 1))
+
+    plt.figure(figsize=(9, 5))
+    plt.plot(pairs, kl_values, marker="o", linewidth=2)
+    plt.xlabel("Temporal Pair (Tj, Tj+1)")
+    plt.ylabel("KL Divergence")
+    plt.title(f"{centrality_name}: Consecutive Distribution KL Divergence")
+    plt.xticks(pairs)
+    plt.grid(True)
+    plt.tight_layout()
+
+    filename = (
+        centrality_name.lower().replace(" ", "_")
+        + "_kl_divergence.png"
+    )
+    _finish_figure(filename)
 
 
 def plot_persistent_graph_statistics(
@@ -163,8 +197,4 @@ consecutive temporal graphs.
 
     plt.tight_layout()
 
-    plt.savefig(
-        "outputs/figures/persistent_graph_statistics.png"
-    )
-
-    plt.show()
+    _finish_figure("persistent_graph_statistics.png")

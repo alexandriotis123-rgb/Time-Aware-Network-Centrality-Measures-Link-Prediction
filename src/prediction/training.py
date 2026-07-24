@@ -135,7 +135,10 @@ def find_best_single_range(
 
     print(f"\n{similarity_measure}")
     print(f"Candidate edges: {len(candidate_edges)}")
-    print(f"Ground truth: {len(ground_truth_edges)}")
+    print(
+        "Ground truth in candidates: "
+        f"{len(set(ground_truth_edges).intersection(candidate_edges))}"
+    )
     print(f"Best ranges: {best_ranges}")
     print(f"BAL_ACC={best_accuracy:.4f}  TPR={best_tpr:.4f}  TNR={best_tnr:.4f}")
     print(f"lambda={compute_lambda(ground_truth_edges, candidate_edges):.4f}")

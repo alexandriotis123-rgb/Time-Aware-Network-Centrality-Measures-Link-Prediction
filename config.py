@@ -73,13 +73,13 @@ DEBUG_MAX_CANDIDATE_EDGES = 200000
 
 RUN = {
     # Part 1
-    "network_evolution": False,
+    "network_evolution": True,
     # Centrality Measures
-    "degree": False,
-    "closeness": False,
-    "betweenness": False,
-    "eigenvector": False,
-    "katz": False,
+    "degree": True,
+    "closeness": True,
+    "betweenness": True,
+    "eigenvector": True,
+    "katz": True,
 }
 
 RUN_CANDIDATE_EDGES = False
@@ -90,7 +90,7 @@ RUN_TRAINING_EXPERIMENT = True
 
 # Training
 MAX_UNIQUE_SCORES = 50
-# Holdout test ratio when creating train/validation/test splits
-TEST_HOLDOUT_RATIO = 0.2
+# Validation is drawn only from the balanced E_j* training population.
+VALIDATION_RATIO = 0.2
 # Max number of non-overlapping intervals to accept per similarity measure
 MAX_INTERVALS = 3

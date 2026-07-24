@@ -185,6 +185,7 @@ def compute_accuracy(*args):
         predicted_edges = _coerce_edge_set(predicted_edges)
         ground_truth_edges = _coerce_edge_set(ground_truth_edges)
         candidate_edges = _coerce_edge_set(candidate_edges)
+        ground_truth_edges = ground_truth_edges.intersection(candidate_edges)
 
         lambda_coefficient = compute_lambda(ground_truth_edges, candidate_edges)
         true_positive_rate = compute_tpr(predicted_edges, ground_truth_edges)
@@ -213,6 +214,7 @@ def compute_balanced_accuracy(*args):
         predicted_edges = _coerce_edge_set(predicted_edges)
         ground_truth_edges = _coerce_edge_set(ground_truth_edges)
         candidate_edges = _coerce_edge_set(candidate_edges)
+        ground_truth_edges = ground_truth_edges.intersection(candidate_edges)
 
         true_positive_rate = compute_tpr(predicted_edges, ground_truth_edges)
         true_negative_rate = compute_tnr(

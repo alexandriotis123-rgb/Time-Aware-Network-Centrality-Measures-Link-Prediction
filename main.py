@@ -20,7 +20,10 @@ from src.analysis.centrality import (
     compute_eigenvector_centrality,
     compute_katz_centrality,
     run_centrality_analysis)
-from src.visualization.plots import plot_centrality_histogram
+from src.visualization.plots import (
+    plot_centrality_histogram,
+    plot_kl_divergence,
+)
 from src.preprocessing.persistent_nodes import build_persistent_pairs
 from src.analysis.graph_statistics import (compute_persistent_graph_statistics)
 from src.visualization.plots import plot_persistent_graph_statistics
@@ -111,7 +114,8 @@ def _run_main():
             centrality_function=compute_degree_centrality,
             centrality_name="Degree Centrality",
             plot_function=plot_centrality_histogram,
-            log_scale=True
+            log_scale=True,
+            kl_plot_function=plot_kl_divergence,
         )
 
     if RUN["closeness"]:
@@ -121,7 +125,8 @@ def _run_main():
             centrality_function=compute_closeness_centrality,
             centrality_name="Closeness Centrality",
             plot_function=plot_centrality_histogram,
-            log_scale=False
+            log_scale=False,
+            kl_plot_function=plot_kl_divergence,
         )
 
 
@@ -132,7 +137,9 @@ def _run_main():
             centrality_function=compute_betweenness_centrality,
             centrality_name="Betweenness Centrality",
             plot_function=plot_centrality_histogram,
-            log_scale=True)
+            log_scale=True,
+            kl_plot_function=plot_kl_divergence,
+        )
 
 
     if RUN["eigenvector"]:
@@ -142,7 +149,9 @@ def _run_main():
             centrality_function=compute_eigenvector_centrality,
             centrality_name="Eigenvector Centrality",
             plot_function=plot_centrality_histogram,
-            log_scale=True)
+            log_scale=True,
+            kl_plot_function=plot_kl_divergence,
+        )
 
 
     if RUN["katz"]:
@@ -152,7 +161,9 @@ def _run_main():
             centrality_function=compute_katz_centrality,
             centrality_name="Katz Centrality",
             plot_function=plot_centrality_histogram,
-            log_scale=True)
+            log_scale=True,
+            kl_plot_function=plot_kl_divergence,
+        )
         
 
     if RUN_CANDIDATE_EDGES:
@@ -179,7 +190,12 @@ def _run_main():
 
         graph_1, graph_2 = persistent_pairs[0]
 
-        candidate_edges = build_candidate_edges(persistent_node_sets[0])
+        # This block is only a five-row preview. Avoid materializing every
+        # possible node pair before discarding all but the first five.
+        candidate_edges = build_candidate_edges(
+            persistent_node_sets[0],
+            max_candidates=5,
+        )
 
         feature_vectors = build_feature_vectors(graph_1,candidate_edges)
 
@@ -197,9 +213,17 @@ def _run_main():
 
         graph_1, graph_2 = persistent_pairs[0]
 
-        candidate_edges = build_candidate_edges(persistent_node_sets[0])
+        candidate_edges = build_candidate_edges(
+            persistent_node_sets[0],
+            max_candidates=5,
+        )
 
-        dataset = build_dataset(graph_1,graph_2,candidate_edges)
+        dataset = build_dataset(
+            graph_1,
+            graph_2,
+            candidate_edges,
+            positive_edges=graph_1.edges(),
+        )
 
         print("\nFirst 5 dataset rows:\n")
 
@@ -223,7 +247,8 @@ def _run_main():
 
                 print(
                     f"{position}. {measure} "
-                    f"(accuracy = {info['accuracy']:.4f})")
+                    f"(balanced accuracy = "
+                    f"{info['balanced_accuracy']:.4f})")
         
 if __name__ == "__main__":
     main()

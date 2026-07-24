@@ -27,6 +27,9 @@ def build_candidate_edges(
         _canonical_edge(edge) for edge in existing_edges
     } if existing_edges is not None else set()
 
+    if len(node_list) < 2:
+        return []
+
     if max_candidates is None:
         return [
             _canonical_edge(edge)
