@@ -9,9 +9,9 @@ def split_candidate_edges_stratified(
     candidate_edges,
     ground_truth_edges,
     val_ratio=0.3,
-    seed=42,
-):
-    """Split candidate edges into train/validation partitions while preserving class balance."""
+    seed=42,):
+    """Split candidate edges into train/validation partitions
+     while keeping class balance."""
 
     positives = [edge for edge in candidate_edges if edge in ground_truth_edges]
     negatives = [edge for edge in candidate_edges if edge not in ground_truth_edges]
@@ -49,26 +49,10 @@ def split_candidate_edges_stratified(
 def balance_candidate_edges(
     candidate_edges,
     ground_truth_edges,
-    seed=42
-):
+    seed=42):
     """
     Random undersampling of the non-existing edges.
 
-    Parameters
-    ----------
-    candidate_edges : iterable
-        All candidate edges.
-
-    ground_truth_edges : set
-        Existing edges.
-
-    seed : int
-        Random seed.
-
-    Returns
-    -------
-    list
-        Balanced candidate edges.
     """
 
     positives = list(ground_truth_edges)
@@ -76,8 +60,7 @@ def balance_candidate_edges(
     negatives = [
         edge
         for edge in candidate_edges
-        if edge not in ground_truth_edges
-    ]
+        if edge not in ground_truth_edges]
 
     if not positives:
         return list(candidate_edges)
@@ -86,8 +69,7 @@ def balance_candidate_edges(
 
     sampled_negatives = rng.sample(
         negatives,
-        len(positives)
-    )
+        len(positives))
 
     balanced_edges = positives + sampled_negatives
 

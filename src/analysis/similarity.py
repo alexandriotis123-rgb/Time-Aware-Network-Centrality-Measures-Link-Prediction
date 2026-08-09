@@ -7,10 +7,6 @@ import networkx as nx
 
 
 def shortest_path_similarity(graph, node_u, node_v, ignore_direct_edge=False):
-    """Return the SNA shortest-path similarity ``1 / distance``.
-
-    Disconnected pairs receive zero, as specified in ``SNA.pdf``.
-    """
 
     if node_u == node_v:
         return 1.0

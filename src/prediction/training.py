@@ -1,16 +1,3 @@
-"""
-Brute-force training algorithm.
-
-Description
------------
-Evaluates every possible continuous similarity interval.
-
-This implementation is preserved for comparison with the
-optimized training algorithms.
-"""
-
-
-
 from src.utils.helpers import SIMILARITY_COLUMNS
 from src.prediction.evaluation import compute_accuracy, compute_balanced_accuracy, compute_lambda
 from config import MAX_UNIQUE_SCORES
@@ -21,12 +8,9 @@ MIN_IMPROVEMENT = 1e-4
 
 
 def generate_similarity_ranges(similarity_scores):
-    """
-    Generate all possible continuous similarity score ranges.
-
     
-    """
-
+    """Generate all possible continuous similarity score ranges."""
+    
     MAX_SCORES = MAX_UNIQUE_SCORES
 
     unique_scores = sorted(set(similarity_scores))
@@ -60,11 +44,6 @@ def find_best_single_range(
     candidate_edges,
     ground_truth_edges,
     similarity_measure):
-    """
-    Determine the optimal similarity range set that maximizes
-    prediction accuracy.
-
-    """
 
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
@@ -137,8 +116,7 @@ def find_best_single_range(
     print(f"Candidate edges: {len(candidate_edges)}")
     print(
         "Ground truth in candidates: "
-        f"{len(set(ground_truth_edges).intersection(candidate_edges))}"
-    )
+        f"{len(set(ground_truth_edges).intersection(candidate_edges))}")
     print(f"Best ranges: {best_ranges}")
     print(f"BAL_ACC={best_accuracy:.4f}  TPR={best_tpr:.4f}  TNR={best_tnr:.4f}")
     print(f"lambda={compute_lambda(ground_truth_edges, candidate_edges):.4f}")
@@ -177,34 +155,25 @@ def improve_range_set(
 
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
-    # Evaluate the current ranges on the validation dataset first, so the
-    # improvement threshold is compared consistently on validation.
     best_accuracy, best_tpr, best_tnr = compute_balanced_accuracy(
         dataset,
         similarity_index,
         current_ranges,
         ground_truth_edges,
-        candidate_edges,
-    )
+        candidate_edges,)
 
     best_ranges = list(current_ranges)
 
     if len(best_ranges) > max_intervals:
         raise ValueError(
-            "The current range set already exceeds max_intervals."
-        )
+            "The current range set already exceeds max_intervals.")
 
-    # This matters when a multi-interval range learned on training is passed
-    # to validation. Do not add a fourth interval to an existing three-range
-    # classifier when MAX_INTERVALS is three.
+  
     if len(best_ranges) == max_intervals:
         return (best_ranges, best_accuracy, best_tpr, best_tnr)
 
-    # Keep track of which candidates are still available
     remaining_candidates = list(candidate_ranges)
 
-    # Stop when no candidate gives meaningful improvement or when we've
-    # reached the configured maximum number of intervals.
     while len(best_ranges) < max_intervals:
         found_improvement = False
         best_step = None
@@ -225,8 +194,7 @@ def improve_range_set(
                 similarity_index,
                 new_ranges,
                 ground_truth_edges,
-                candidate_edges,
-            )
+                candidate_edges,)
 
             improvement = accuracy - best_accuracy
 
@@ -252,8 +220,7 @@ def improve_range_set(
 
         remaining_candidates = [
             c for c in remaining_candidates
-            if not any(overlaps(c[0], r) for r in best_ranges)
-        ]
+            if not any(overlaps(c[0], r) for r in best_ranges)]
 
     return (best_ranges, best_accuracy, best_tpr, best_tnr)
 

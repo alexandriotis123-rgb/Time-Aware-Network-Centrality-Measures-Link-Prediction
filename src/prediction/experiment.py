@@ -11,22 +11,20 @@ from config import (
     DEBUG_MODE,
     DEBUG_MAX_CANDIDATE_EDGES,
     RANDOM_SEED,
-    VALIDATION_RATIO,
-)
+    VALIDATION_RATIO,)
 from src.preprocessing.balanced_dataset import split_candidate_edges_stratified
 
 from src.utils.helpers import SIMILARITY_COLUMNS, SIMILARITY_MEASURES
 from src.prediction.training import (
     train_similarity_measure,
-    improve_range_set,
-)
+    improve_range_set,)
+
 from src.prediction.evaluation import (
     compute_accuracy,
     compute_balanced_accuracy,
     compute_precision,
     compute_recall,
-    compute_tnr,
-)
+    compute_tnr,)
 from src.preprocessing.candidate_edges import build_candidate_edges
 from src.preprocessing.dataset import build_dataset
 
@@ -37,12 +35,11 @@ def _canonical_edge_set(edges):
     return {
         (u, v) if u <= v else (v, u)
         for u, v in edges
-        if u != v
-    }
+        if u != v}
 
 
 def _sample_edges(edges, maximum, seed):
-    """Reproducibly cap an edge set while preserving all edges when possible."""
+
 
     edge_list = sorted(edges)
     if maximum is None or len(edge_list) <= maximum:
@@ -57,14 +54,8 @@ def build_sna_edge_partitions(
     graph_2,
     persistent_nodes,
     max_candidates=None,
-    seed=RANDOM_SEED,
-):
-    """Construct balanced SNA training and test edge populations.
-
-    Positive training edges are ``E_j*`` and positive test edges are
-    ``E_(j+1)*``. Negative edges are sampled from pairs absent from both
-    graphs, and the training/test negative samples are disjoint.
-    """
+    seed=RANDOM_SEED,):
+    
 
     all_train_positive = _canonical_edge_set(graph_1.edges())
     all_test_positive = _canonical_edge_set(graph_2.edges())
@@ -76,35 +67,25 @@ def build_sna_edge_partitions(
     train_positive = _sample_edges(
         all_train_positive,
         maximum_positives,
-        seed,
-    )
+        seed,)
     test_positive = _sample_edges(
         all_test_positive,
         maximum_positives,
-        seed + 1,
-    )
+        seed + 1,)
 
-    # Never label an actual edge as a negative, even when debug mode caps
-    # the number of positive examples retained in either partition.
     excluded_edges = all_train_positive.union(all_test_positive)
     required_negative_count = len(train_positive) + len(test_positive)
     negative_edges = build_candidate_edges(
         persistent_nodes,
         existing_edges=excluded_edges,
         max_candidates=required_negative_count,
-        seed=seed + 2,
-    )
+        seed=seed + 2,)
 
     if len(negative_edges) < required_negative_count:
-        raise ValueError(
-            "Not enough non-existing edges to construct balanced, "
-            "disjoint training and test populations."
-        )
+        raise ValueError()
 
     train_negative = negative_edges[:len(train_positive)]
-    test_negative = negative_edges[
-        len(train_positive):required_negative_count
-    ]
+    test_negative = negative_edges[len(train_positive):required_negative_count]
 
     train_candidates = list(train_positive) + train_negative
     test_candidates = list(test_positive) + test_negative
@@ -119,8 +100,7 @@ def build_sna_edge_partitions(
         "train_negative": set(train_negative),
         "test_negative": set(test_negative),
         "train_candidates": train_candidates,
-        "test_candidates": test_candidates,
-    }
+        "test_candidates": test_candidates,}
 
 
 def evaluate_similarity_measures(
@@ -128,12 +108,7 @@ def evaluate_similarity_measures(
     val_dataset,
     train_candidates,
     val_candidates,
-    ground_truth_train,
-):
-    """
-    Train every similarity measure and store
-    its optimal ranges and validation accuracy.
-    """
+    ground_truth_train,):
 
     results = {}
 
@@ -141,25 +116,21 @@ def evaluate_similarity_measures(
         print(f"\nTraining {similarity_measure}...")
         start = time.perf_counter()
 
-        # Train on the training partition
         ranges, train_acc, train_tpr, train_tnr, candidate_ranges = train_similarity_measure(
             train_dataset,
             train_candidates,
             ground_truth_train,
-            similarity_measure,
-        )
+            similarity_measure,)
 
-        # Compute the validation baseline for the starting range set
+        
         similarity_index = SIMILARITY_COLUMNS[similarity_measure]
         val_acc, val_tpr, val_tnr = compute_balanced_accuracy(
             val_dataset,
             similarity_index,
             ranges,
             ground_truth_train,
-            val_candidates,
-        )
+            val_candidates,)
 
-        # Attempt to improve the ranges using the validation partition
         improved_ranges, val_acc, val_tpr, val_tnr = improve_range_set(
             val_dataset,
             val_candidates,
@@ -169,8 +140,7 @@ def evaluate_similarity_measures(
             val_acc,
             val_tpr,
             val_tnr,
-            candidate_ranges,
-        )
+            candidate_ranges,)
 
         elapsed = time.perf_counter() - start
 
@@ -188,8 +158,7 @@ def evaluate_similarity_measures(
             "train_tnr": train_tnr,
             "validation_accuracy": val_acc,
             "validation_tpr": val_tpr,
-            "validation_tnr": val_tnr,
-        }
+            "validation_tnr": val_tnr,}
 
     return results
 
@@ -213,9 +182,8 @@ def evaluate_trained_ranges(
     ground_truth_edges,
     similarity_measure,
     similarity_ranges,
-    top_k=100,
-):
-    """Evaluate fixed ranges on the balanced SNA test population."""
+    top_k=100,):
+    """Evaluate fixed ranges"""
 
     similarity_index = SIMILARITY_COLUMNS[similarity_measure]
 
@@ -234,8 +202,7 @@ def evaluate_trained_ranges(
     balanced_accuracy = compute_balanced_accuracy(
         predicted_edges,
         ground_truth_edges,
-        candidate_edges,
-    )
+        candidate_edges,)
     precision = compute_precision(predicted_edges, ground_truth_edges)
     recall = compute_recall(predicted_edges, ground_truth_edges)
     tnr = compute_tnr(predicted_edges, ground_truth_edges, candidate_edges)
@@ -251,16 +218,10 @@ def evaluate_trained_ranges(
         "tnr": tnr,
         "precision": precision,
         "recall": recall,
-        "precision_at_k": precision_at_k,
-    }
+        "precision_at_k": precision_at_k,}
 
 
 def run_training_experiment(persistent_pairs, persistent_node_sets):
-    """
-    Run the training experiment for every pair of
-    successive persistent graphs.
-
-    """
 
     experiment_results = []
 
@@ -278,8 +239,7 @@ def run_training_experiment(persistent_pairs, persistent_node_sets):
             graph_2,
             persistent_nodes,
             max_candidates=max_candidates,
-            seed=RANDOM_SEED + 10 * pair_index,
-        )
+            seed=RANDOM_SEED + 10 * pair_index,)
 
         ground_truth_train = edge_partitions["train_positive"]
         ground_truth_test = edge_partitions["test_positive"]
@@ -289,21 +249,17 @@ def run_training_experiment(persistent_pairs, persistent_node_sets):
         print(
             f"Training positives/negatives: "
             f"{len(ground_truth_train):,}/"
-            f"{len(edge_partitions['train_negative']):,}"
-        )
+            f"{len(edge_partitions['train_negative']):,}")
         print(
             f"Test positives/negatives: "
             f"{len(ground_truth_test):,}/"
-            f"{len(edge_partitions['test_negative']):,}"
-        )
+            f"{len(edge_partitions['test_negative']):,}")
 
-        # Validation is a stratified subset of E_j* training data only.
         train_candidates, val_candidates = split_candidate_edges_stratified(
             training_pool,
             ground_truth_train,
             val_ratio=VALIDATION_RATIO,
-            seed=RANDOM_SEED + pair_index,
-        )
+            seed=RANDOM_SEED + pair_index,)
 
         print(f"Train candidates: {len(train_candidates):,} | Validation candidates: {len(val_candidates):,}")
 
@@ -311,33 +267,27 @@ def run_training_experiment(persistent_pairs, persistent_node_sets):
             graph_1,
             graph_2,
             train_candidates,
-            positive_edges=ground_truth_train,
-        ))
+            positive_edges=ground_truth_train,))
         val_dataset = list(build_dataset(
             graph_1,
             graph_2,
             val_candidates,
-            positive_edges=ground_truth_train,
-        ))
+            positive_edges=ground_truth_train,))
         test_dataset = list(build_dataset(
             graph_1,
             graph_2,
             test_candidates,
-            positive_edges=ground_truth_test,
-        ))
+            positive_edges=ground_truth_test,))
 
         print(f"Train dataset size: {len(train_dataset):,} | Val size: {len(val_dataset):,} | Test size: {len(test_dataset):,}")
 
-        # Evaluate/training per similarity measure using train + validation
         results = evaluate_similarity_measures(
             train_dataset,
             val_dataset,
             train_candidates,
             val_candidates,
-            ground_truth_train,
-        )
+            ground_truth_train,)
 
-        # Final evaluation on the holdout test set using the improved ranges
         full_evaluation = {}
         for similarity_measure, info in results.items():
             full_evaluation[similarity_measure] = evaluate_trained_ranges(
@@ -345,8 +295,7 @@ def run_training_experiment(persistent_pairs, persistent_node_sets):
                 test_candidates,
                 ground_truth_test,
                 similarity_measure,
-                info["ranges"],
-            )
+                info["ranges"],)
 
         print("\nValidation scores")
         for measure, info in results.items():

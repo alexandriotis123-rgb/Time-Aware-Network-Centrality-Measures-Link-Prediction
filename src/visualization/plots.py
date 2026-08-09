@@ -4,6 +4,7 @@ Visualization functions.
 """
 
 from pathlib import Path
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -11,7 +12,6 @@ from config import FIGURE_DPI, FIGURES_FOLDER, SAVE_FIGURES
 
 
 def _finish_figure(filename):
-    """Save a figure when configured and always release its resources."""
 
     if SAVE_FIGURES:
         output_path = Path(FIGURES_FOLDER) / filename
@@ -22,10 +22,6 @@ def _finish_figure(filename):
 
 
 def plot_network_evolution(subgraphs):
-    """
-    Plot the evolution of the number of nodes and edges
-    across all temporal network snapshots.
-    """
 
     node_counts = []
     edge_counts = []
@@ -38,17 +34,9 @@ def plot_network_evolution(subgraphs):
 
     plt.figure(figsize=(10, 8))
 
-    # -------------------------
-    # Number of Nodes
-    # -------------------------
     plt.subplot(2, 1, 1)
 
-    plt.plot(
-        periods,
-        node_counts,
-        marker="o",
-        linewidth=2
-    )
+    plt.plot(periods,node_counts,marker="o", linewidth=2)
 
     plt.title("Temporal Evolution of |V|")
 
@@ -60,17 +48,9 @@ def plot_network_evolution(subgraphs):
 
     plt.grid(True)
 
-    # -------------------------
-    # Number of Edges
-    # -------------------------
     plt.subplot(2, 1, 2)
 
-    plt.plot(
-        periods,
-        edge_counts,
-        marker="s",
-        linewidth=2
-    )
+    plt.plot(periods,edge_counts,marker="s", linewidth=2)
 
     plt.title("Temporal Evolution of |E|")
 
@@ -92,12 +72,7 @@ def plot_centrality_histogram(
     title,
     filename,
     log_scale=False,
-    bins=30,
-):
-    """
-    Plot the probability density histogram
-    of a centrality measure.
-    """
+    bins=30,):
 
     plt.figure(figsize=(8, 5))
 
@@ -105,8 +80,7 @@ def plot_centrality_histogram(
         values,
         bins=bins,
         density=True,
-        edgecolor="black"
-    )
+        edgecolor="black")
     if log_scale:
         plt.yscale("log")
 
@@ -127,7 +101,6 @@ def plot_centrality_histogram(
 
 
 def plot_kl_divergence(kl_values, centrality_name):
-    """Plot KL divergence between consecutive temporal distributions."""
 
     pairs = list(range(1, len(kl_values) + 1))
 
@@ -142,21 +115,14 @@ def plot_kl_divergence(kl_values, centrality_name):
 
     filename = (
         centrality_name.lower().replace(" ", "_")
-        + "_kl_divergence.png"
-    )
+        + "_kl_divergence.png")
     _finish_figure(filename)
 
 
 def plot_persistent_graph_statistics(
     persistent_nodes,
     persistent_edges_1,
-    persistent_edges_2
-):
-    """
-Plot the evolution of the persistent
-node and edge volumes between
-consecutive temporal graphs.
-"""
+    persistent_edges_2):
 
     plt.figure(figsize=(9,5))
 
@@ -166,22 +132,11 @@ consecutive temporal graphs.
         pairs,
         persistent_nodes,
         marker="o",
-        label="|V*|"
-    )
+        label="|V*|")
 
-    plt.plot(
-        pairs,
-        persistent_edges_1,
-        marker="s",
-        label="|E1*|"
-    )
+    plt.plot(pairs, persistent_edges_1, marker="s", label="|E1*|")
 
-    plt.plot(
-        pairs,
-        persistent_edges_2,
-        marker="^",
-        label="|E2*|"
-    )
+    plt.plot( pairs, persistent_edges_2, marker="^", label="|E2*|")
 
     plt.xlabel("Temporal Pair")
 
@@ -198,3 +153,78 @@ consecutive temporal graphs.
     plt.tight_layout()
 
     _finish_figure("persistent_graph_statistics.png")
+
+
+def plot_accuracy_comparison(train_accs=[71.88, 66.78, 94.75, 94.77, 94.45], test_accs=[67.32, 65.21, 58.84, 58.81, 58.80], measures=None):
+    """
+    Plot the comparison of Train and Test Balanced Accuracy
+    across all similarity measures.
+    """
+
+    if measures is None:
+        measures = ['PA', 'GD', 'JC', 'AA', 'CN']
+
+    x = np.arange(len(measures))
+    width = 0.35
+
+    plt.figure(figsize=(9, 5.5))
+
+    rects1 = plt.bar(
+        x - width / 2,
+        train_accs,
+        width,
+        label='Train Balanced Accuracy (%)',
+        color='#4C72B0',
+        edgecolor='black',
+        alpha=0.85,)
+    rects2 = plt.bar(
+        x + width / 2,
+        test_accs,
+        width,
+        label='Test Balanced Accuracy (%)',
+        color='#55A868',
+        edgecolor='black',
+        alpha=0.85,)
+
+    plt.ylabel('Balanced Accuracy (%)', fontsize=12, fontweight='bold')
+    plt.title(
+        'Link Prediction Performance Comparison Across Similarity Measures',
+        fontsize=14,
+        fontweight='bold',
+        pad=15,)
+    plt.xticks(
+        x,
+        ['PA', 'GD', 'JC', 'AA', 'CN'],
+        fontsize=11,
+        fontweight='bold',)
+    plt.legend(
+        frameon=True,
+        facecolor='white',
+        edgecolor='gray',
+        fontsize=11,
+        loc='upper right',)
+    plt.ylim(0, 105)
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+    for rect in list(rects1) + list(rects2):
+        height = rect.get_height()
+        plt.annotate(
+            f'{height:.2f}%',
+            xy=(rect.get_x() + rect.get_width() / 2, height),
+            xytext=(0, 3),
+            textcoords='offset points',
+            ha='center',
+            va='bottom',
+            fontsize=9.5,
+            fontweight='bold',)
+
+    plt.tight_layout()
+    if SAVE_FIGURES:
+        output_path1 = Path(FIGURES_FOLDER) / "accuracy_comparison.png"
+        output_path2 = Path(FIGURES_FOLDER) / "link_prediction_comparison.png"
+        output_path1.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path1, dpi=FIGURE_DPI)
+        plt.savefig(output_path2, dpi=FIGURE_DPI)
+    plt.close()
+
+

@@ -8,8 +8,6 @@ from src.utils.helpers import SIMILARITY_COLUMNS
 def predict_edges(dataset,similarity_measure,similarity_ranges):
     """
     Predict edges using one or more similarity score ranges.
-
-    
     """
 
     if similarity_measure not in SIMILARITY_COLUMNS:

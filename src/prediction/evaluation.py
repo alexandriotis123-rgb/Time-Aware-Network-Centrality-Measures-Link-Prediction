@@ -1,5 +1,4 @@
 def _coerce_edge_set(edge_collection):
-    """Return a set of edges from a list, tuple, or set."""
 
     if edge_collection is None:
         return set()
@@ -15,14 +14,11 @@ def _compute_accuracy_from_dataset(
     similarity_index,
     similarity_ranges,
     ground_truth_edges,
-    candidate_edges,
-):
-    """Compute accuracy metrics directly from a scored dataset."""
+    candidate_edges,):
 
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
     candidate_edges = _coerce_edge_set(candidate_edges)
 
-    # Only consider ground-truth edges that are inside the candidate population
     ground_truth_in_candidates = ground_truth_edges.intersection(candidate_edges)
 
     total_positive = len(ground_truth_in_candidates)
@@ -34,7 +30,6 @@ def _compute_accuracy_from_dataset(
     for row in dataset:
         edge = (row[0], row[1])
 
-        # Skip rows that are not part of the candidate population
         if edge not in candidate_edges:
             continue
 
@@ -53,16 +48,13 @@ def _compute_accuracy_from_dataset(
         elif (not predicted) and (not actual):
             tn += 1
 
-    lambda_coefficient = (
-        total_positive / len(candidate_edges) if candidate_edges else 0
-    )
+    lambda_coefficient = (total_positive / len(candidate_edges) if candidate_edges else 0)
 
     tpr = tp / total_positive if total_positive else 0
     tnr = tn / total_negative if total_negative else 0
     accuracy = (
         lambda_coefficient * tpr
-        + (1 - lambda_coefficient) * tnr
-    )
+        + (1 - lambda_coefficient) * tnr)
 
     return accuracy, tpr, tnr
 
@@ -72,9 +64,7 @@ def _compute_balanced_accuracy_from_dataset(
     similarity_index,
     similarity_ranges,
     ground_truth_edges,
-    candidate_edges,
-):
-    """Compute balanced accuracy directly from a scored dataset."""
+    candidate_edges,):
 
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
     candidate_edges = _coerce_edge_set(candidate_edges)
@@ -108,7 +98,6 @@ def _compute_balanced_accuracy_from_dataset(
 
 
 def compute_lambda(ground_truth_edges, candidate_edges):
-    """Compute the lambda coefficient for the supplied candidate subset."""
 
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
     candidate_edges = _coerce_edge_set(candidate_edges)
@@ -121,7 +110,6 @@ def compute_lambda(ground_truth_edges, candidate_edges):
 
 
 def compute_tpr(predicted_edges, ground_truth_edges):
-    """Compute the True Positive Rate (TPR)."""
 
     predicted_edges = _coerce_edge_set(predicted_edges)
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
@@ -134,7 +122,6 @@ def compute_tpr(predicted_edges, ground_truth_edges):
 
 
 def compute_precision(predicted_edges, ground_truth_edges):
-    """Compute the precision of the predicted edge set."""
 
     predicted_edges = _coerce_edge_set(predicted_edges)
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
@@ -146,7 +133,6 @@ def compute_precision(predicted_edges, ground_truth_edges):
 
 
 def compute_recall(predicted_edges, ground_truth_edges):
-    """Compute the recall of the predicted edge set."""
 
     predicted_edges = _coerce_edge_set(predicted_edges)
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
@@ -158,7 +144,6 @@ def compute_recall(predicted_edges, ground_truth_edges):
 
 
 def compute_tnr(predicted_edges, ground_truth_edges, candidate_edges):
-    """Compute the True Negative Rate (TNR)."""
 
     predicted_edges = _coerce_edge_set(predicted_edges)
     ground_truth_edges = _coerce_edge_set(ground_truth_edges)
@@ -171,14 +156,12 @@ def compute_tnr(predicted_edges, ground_truth_edges, candidate_edges):
 
     predicted_negative_edges = candidate_edges - predicted_edges
     true_negative_edges = predicted_negative_edges.intersection(
-        ground_truth_negative_edges
-    )
+        ground_truth_negative_edges)
 
     return len(true_negative_edges) / len(ground_truth_negative_edges)
 
 
 def compute_accuracy(*args):
-    """Compute prediction accuracy from either predicted edge sets or scored rows."""
 
     if len(args) == 3:
         predicted_edges, ground_truth_edges, candidate_edges = args
@@ -192,13 +175,11 @@ def compute_accuracy(*args):
         true_negative_rate = compute_tnr(
             predicted_edges,
             ground_truth_edges,
-            candidate_edges,
-        )
+            candidate_edges,)
 
         return (
             lambda_coefficient * true_positive_rate
-            + (1 - lambda_coefficient) * true_negative_rate
-        )
+            + (1 - lambda_coefficient) * true_negative_rate)
 
     if len(args) == 5:
         return _compute_accuracy_from_dataset(*args)
@@ -207,7 +188,6 @@ def compute_accuracy(*args):
 
 
 def compute_balanced_accuracy(*args):
-    """Compute balanced accuracy from either predicted edge sets or scored rows."""
 
     if len(args) == 3:
         predicted_edges, ground_truth_edges, candidate_edges = args
@@ -220,8 +200,7 @@ def compute_balanced_accuracy(*args):
         true_negative_rate = compute_tnr(
             predicted_edges,
             ground_truth_edges,
-            candidate_edges,
-        )
+            candidate_edges,)
 
         return (true_positive_rate + true_negative_rate) / 2
 

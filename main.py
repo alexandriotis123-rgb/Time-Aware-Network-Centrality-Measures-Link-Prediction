@@ -22,8 +22,7 @@ from src.analysis.centrality import (
     run_centrality_analysis)
 from src.visualization.plots import (
     plot_centrality_histogram,
-    plot_kl_divergence,
-)
+    plot_kl_divergence,)
 from src.preprocessing.persistent_nodes import build_persistent_pairs
 from src.analysis.graph_statistics import (compute_persistent_graph_statistics)
 from src.visualization.plots import plot_persistent_graph_statistics
@@ -76,8 +75,7 @@ def _run_main():
     plot_persistent_graph_statistics(
         persistent_nodes,
         persistent_edges_1,
-        persistent_edges_2
-    )
+        persistent_edges_2)
 
     for i in range(len(persistent_nodes)):
 
@@ -85,8 +83,7 @@ def _run_main():
             f"Pair {i+1}: "
             f"|V*| = {persistent_nodes[i]}, "
             f"|E1*| = {persistent_edges_1[i]}, "
-            f"|E2*| = {persistent_edges_2[i]}"
-        )
+            f"|E2*| = {persistent_edges_2[i]}")
     
     print(f"\nPersistent graph pairs: {len(persistent_pairs)}")
 
@@ -97,8 +94,7 @@ def _run_main():
             f"G{i}* -> {graph_1.number_of_nodes()} nodes, "
             f"{graph_1.number_of_edges()} edges | "
             f"G{i+1}* -> {graph_2.number_of_nodes()} nodes, "
-            f"{graph_2.number_of_edges()} edges"
-        )
+            f"{graph_2.number_of_edges()} edges")
 
     print("\nSubgraphs created:", len(subgraphs))
 
@@ -115,8 +111,7 @@ def _run_main():
             centrality_name="Degree Centrality",
             plot_function=plot_centrality_histogram,
             log_scale=True,
-            kl_plot_function=plot_kl_divergence,
-        )
+            kl_plot_function=plot_kl_divergence,)
 
     if RUN["closeness"]:
 
@@ -126,8 +121,7 @@ def _run_main():
             centrality_name="Closeness Centrality",
             plot_function=plot_centrality_histogram,
             log_scale=False,
-            kl_plot_function=plot_kl_divergence,
-        )
+            kl_plot_function=plot_kl_divergence,)
 
 
     if RUN["betweenness"]:
@@ -138,8 +132,7 @@ def _run_main():
             centrality_name="Betweenness Centrality",
             plot_function=plot_centrality_histogram,
             log_scale=True,
-            kl_plot_function=plot_kl_divergence,
-        )
+            kl_plot_function=plot_kl_divergence,)
 
 
     if RUN["eigenvector"]:
@@ -150,8 +143,7 @@ def _run_main():
             centrality_name="Eigenvector Centrality",
             plot_function=plot_centrality_histogram,
             log_scale=True,
-            kl_plot_function=plot_kl_divergence,
-        )
+            kl_plot_function=plot_kl_divergence,)
 
 
     if RUN["katz"]:
@@ -162,8 +154,7 @@ def _run_main():
             centrality_name="Katz Centrality",
             plot_function=plot_centrality_histogram,
             log_scale=True,
-            kl_plot_function=plot_kl_divergence,
-        )
+            kl_plot_function=plot_kl_divergence,)
         
 
     if RUN_CANDIDATE_EDGES:
@@ -190,12 +181,9 @@ def _run_main():
 
         graph_1, graph_2 = persistent_pairs[0]
 
-        # This block is only a five-row preview. Avoid materializing every
-        # possible node pair before discarding all but the first five.
         candidate_edges = build_candidate_edges(
             persistent_node_sets[0],
-            max_candidates=5,
-        )
+            max_candidates=5,)
 
         feature_vectors = build_feature_vectors(graph_1,candidate_edges)
 
@@ -215,15 +203,13 @@ def _run_main():
 
         candidate_edges = build_candidate_edges(
             persistent_node_sets[0],
-            max_candidates=5,
-        )
+            max_candidates=5,)
 
         dataset = build_dataset(
             graph_1,
             graph_2,
             candidate_edges,
-            positive_edges=graph_1.edges(),
-        )
+            positive_edges=graph_1.edges(),)
 
         print("\nFirst 5 dataset rows:\n")
 

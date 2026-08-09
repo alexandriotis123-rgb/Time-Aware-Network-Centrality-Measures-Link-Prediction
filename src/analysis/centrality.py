@@ -17,15 +17,6 @@ def compute_degree_centrality(graph):
     """
     Compute Degree Centrality for every node
     of a temporal graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-
-    Returns
-    -------
-    list
-        Degree centrality values.
     """
 
     degree = nx.degree_centrality(graph)
@@ -36,51 +27,17 @@ def compute_closeness_centrality(graph):
     """
     Compute Closeness Centrality for every node
     of a temporal graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-
-    Returns
-    -------
-    list
-        Closeness centrality values.
     """
 
     closeness = nx.closeness_centrality(graph)
 
     return list(closeness.values())
 
-def compute_betweenness_centrality(
-    graph,
-    k=500
-):
-    
-    # Set k=None for the exact Brandes algorithm.
-    # Use k=500 (or another suitable value) for a faster approximation
-    # during development or for very large temporal graphs.
+def compute_betweenness_centrality(graph, k=500):
     """
     Compute Betweenness Centrality for every node
     of a temporal graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-
-    k : int or None, optional
-        Number of sampled nodes used for approximation.
-        If None, the exact Brandes algorithm is executed.
-
-    Returns
-    -------
-    list
-        Betweenness centrality values.
     """
-
-    # Exact computation (k=None).
-    # If execution becomes prohibitively slow for large snapshots,
-    # use k=500 (or another suitable value)
-    # to obtain a faster approximate solution.
 
     if graph.number_of_nodes() == 0:
         return []
@@ -88,8 +45,7 @@ def compute_betweenness_centrality(
     sample_size = (
         min(k, graph.number_of_nodes())
         if k is not None
-        else None
-    )
+        else None)
 
     betweenness = nx.betweenness_centrality(
         graph,
@@ -97,8 +53,7 @@ def compute_betweenness_centrality(
         normalized=True,
         weight=None,
         endpoints=False,
-        seed=RANDOM_SEED
-    )
+        seed=RANDOM_SEED)
 
     return list(betweenness.values())
 
@@ -107,15 +62,6 @@ def compute_eigenvector_centrality(graph):
     """
     Compute Eigenvector Centrality for every node
     of a temporal graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-
-    Returns
-    -------
-    list
-        Eigenvector centrality values.
     """
 
     if graph.number_of_nodes() == 0:
@@ -124,8 +70,7 @@ def compute_eigenvector_centrality(graph):
     eigenvector = nx.eigenvector_centrality(
         graph,
         max_iter=1000,
-        tol=1e-06
-    )
+        tol=1e-06)
 
     return list(eigenvector.values())
 
@@ -134,23 +79,7 @@ def compute_katz_centrality(graph,alpha=0.005):
     """
     Compute Katz Centrality for every node
     of a temporal graph.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-
-    alpha : float, optional
-        Attenuation factor.
-        It can be adjusted depending on the graph size.
-
-    Returns
-    -------
-    list
-        Katz centrality values.
     """
-
-    # Alpha is exposed as a parameter so it can be tuned if needed.
-    # Smaller values improve convergence on large temporal graphs.
 
     if graph.number_of_nodes() == 0:
         return []
@@ -160,8 +89,7 @@ def compute_katz_centrality(graph,alpha=0.005):
         alpha=alpha,
         beta=1.0,
         max_iter=1000,
-        tol=1e-06
-    )
+        tol=1e-06)
 
     return list(katz.values())
 
@@ -173,11 +101,10 @@ def build_centrality_distributions(values_by_period, bins=30):
         value
         for values in values_by_period
         for value in values
-        if np.isfinite(value)
-    ]
+        if np.isfinite(value)]
 
     if not finite_values:
-        raise ValueError("Centrality distributions require finite values.")
+        raise ValueError("Centrality distributions have to be finite values.")
 
     bin_edges = np.histogram_bin_edges(finite_values, bins=bins)
     distributions = []
@@ -211,10 +138,8 @@ def consecutive_kl_divergences(distributions, epsilon=1e-4):
         kl_divergence(
             distributions[index],
             distributions[index + 1],
-            epsilon=epsilon,
-        )
-        for index in range(len(distributions) - 1)
-    ]
+            epsilon=epsilon,)
+        for index in range(len(distributions) - 1)]
 
 
 def save_kl_results(centrality_name, kl_values):
@@ -224,8 +149,7 @@ def save_kl_results(centrality_name, kl_values):
     results_path.mkdir(parents=True, exist_ok=True)
     filename = (
         centrality_name.lower().replace(" ", "_")
-        + "_kl_divergence.csv"
-    )
+        + "_kl_divergence.csv")
 
     with (results_path / filename).open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
@@ -242,8 +166,7 @@ def run_centrality_analysis(
     log_scale=False,
     kl_plot_function=None,
     bins=30,
-    epsilon=1e-4,
-):
+    epsilon=1e-4,):
     """
     Compute and plot a centrality measure
     for every temporal graph.
@@ -253,12 +176,10 @@ def run_centrality_analysis(
 
     values_by_period = [
         centrality_function(graph)
-        for graph in subgraphs
-    ]
+        for graph in subgraphs]
     bin_edges, distributions = build_centrality_distributions(
         values_by_period,
-        bins=bins,
-    )
+        bins=bins,)
 
     for i, values in enumerate(values_by_period, start=1):
 
@@ -267,15 +188,13 @@ def run_centrality_analysis(
             title=f"{centrality_name} - T{i}",
             filename=f"{centrality_name.lower().replace(' ', '_')}_T{i}.png",
             log_scale=log_scale,
-            bins=bin_edges,
-        )
+            bins=bin_edges,)
 
         print(f"T{i} completed.")
 
     kl_values = consecutive_kl_divergences(
         distributions,
-        epsilon=epsilon,
-    )
+        epsilon=epsilon,)
     save_kl_results(centrality_name, kl_values)
 
     if kl_plot_function is not None:
@@ -289,5 +208,4 @@ def run_centrality_analysis(
         "values": values_by_period,
         "bin_edges": bin_edges,
         "distributions": distributions,
-        "kl_divergences": kl_values,
-    }
+        "kl_divergences": kl_values,}

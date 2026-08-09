@@ -79,8 +79,7 @@ RUN = {
     "closeness": True,
     "betweenness": True,
     "eigenvector": True,
-    "katz": True,
-}
+    "katz": True,}
 
 RUN_CANDIDATE_EDGES = False
 RUN_FEATURE_VECTORS = True
@@ -90,7 +89,7 @@ RUN_TRAINING_EXPERIMENT = True
 
 # Training
 MAX_UNIQUE_SCORES = 50
-# Validation is drawn only from the balanced E_j* training population.
+# Validation
 VALIDATION_RATIO = 0.2
-# Max number of non-overlapping intervals to accept per similarity measure
+# Max number of non overlapping intervals.
 MAX_INTERVALS = 3

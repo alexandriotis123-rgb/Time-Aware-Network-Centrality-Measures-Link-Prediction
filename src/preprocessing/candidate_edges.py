@@ -13,14 +13,9 @@ def build_candidate_edges(
     persistent_nodes,
     existing_edges=None,
     max_candidates=None,
-    seed=42,
-):
-    """Construct candidate edges from a node set.
+    seed=42,):
 
-    If existing_edges is provided, any edge already present there is excluded
-    from the candidate list. For development runs, a candidate cap can be used
-    to avoid building an excessively large edge set.
-    """
+    """Construct candidate edges from a node set."""
 
     node_list = sorted(persistent_nodes)
     existing_edge_set = {
@@ -34,8 +29,7 @@ def build_candidate_edges(
         return [
             _canonical_edge(edge)
             for edge in combinations(node_list, 2)
-            if _canonical_edge(edge) not in existing_edge_set
-        ]
+            if _canonical_edge(edge) not in existing_edge_set]
 
     if max_candidates <= 0:
         return []
