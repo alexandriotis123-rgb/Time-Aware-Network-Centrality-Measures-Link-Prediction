@@ -4,7 +4,7 @@
 
 This project implements the assignment of the course Social Network Analysis.
 
-The objective is to analyze the StackOverflow Temporal Network, study its temporal evolution, compute graph centrality measures, perform link prediction using similarity measures and evaluate the prediction performance.
+The objective is to analyze the StackOverflow Temporal Network, study its temporal evolution, compute graph centrality measures, perform link prediction using similarity measures and evaluate the prediction performance across consecutive temporal graph snapshots.
 
 Implementation language:
 - Python 3.x
@@ -18,22 +18,84 @@ Main Libraries:
 
 ---
 
+
+# Dataset
+
+The project uses the Stack Overflow Temporal Network dataset provided by the
+Stanford Network Analysis Project (SNAP).
+
+The dataset is not included in the project submission because of its large size.
+
+After downloading the dataset, place the file:
+
+    sx-stackoverflow.txt
+
+inside the following directory:
+
+    data/sx-stackoverflow.txt
+
+The expected dataset format is:
+
+    source target timestamp
+
+where each row represents a temporal interaction between two users.
+
+For the experimental evaluation reported in this project, the implementation
+uses the first 500,000 temporal interactions. This is controlled through the
+following configuration:
+
+    DEBUG_MODE = True
+    DEBUG_MAX_ROWS = 500000
+
+The complete experimental methodology remains unchanged; the reduced dataset
+is used to make the experimental pipeline computationally manageable.
+
+---
+
+# Installation
+
+Install the required Python dependencies using:
+
+```bash
+pip install -r requirements.txt
+
 # Project Structure
 
 ```
 TEMPORAL_NETWORK_ANALYSIS_2026
 │
-├── data
-├── notebooks
 ├── outputs
 │   ├── figures
 │   ├── models
-│   └── results
-├── report
+│   |── results
+|   └──main_output.log
 ├── src
-├── tests
-│
+|   ├──analysis
+|   |   ├──centrality
+|   |   ├──similarity
+|   |   ├──graph_statistics  
+|   ├──io
+|   |   ├──data_loader.py
+|   ├──prediction
+|   |   ├──brute_force
+|   |   ├──evaluation
+|   |   ├──experiment
+|   |   ├──link_prediction
+|   |   ├──training
+|   ├──preprocessing
+|   |   ├──balanced_dataset
+|   |   ├──candidate_edges
+|   |   ├──dataset
+|   |   ├──feature_vectors
+|   |   ├──labels
+|   |   ├──persistent_nodes
+|   |   ├──temporal_partition
+|   ├──utils
+|   |   ├──helpers
+|   ├──visualization
+|   |   ├──plots
 ├── config.py
+├──conftest.py
 ├── main.py
 ├── requirements.txt
 └── README.md
@@ -159,11 +221,11 @@ Compute node centrality measures.
 
 Main Functions
 
-- **compute_degree()** – calculates degree centrality.
-- **compute_closeness()** – calculates closeness centrality.
-- **compute_betweenness()** – calculates betweenness centrality.
-- **compute_eigenvector()** – calculates eigenvector centrality.
-- **compute_katz()** – calculates Katz centrality.
+- **compute_degree_centrality()** – calculates degree centrality.
+- **compute_closeness_centrality()** – calculates closeness centrality.
+- **compute_betweenness_centrality()** – calculates betweenness centrality.
+- **compute_eigenvector_centrality()** – calculates eigenvector centrality.
+- **compute_katz_centrality()** – calculates Katz centrality.
 
 Output
 
@@ -181,10 +243,10 @@ Compute similarity matrices for node pairs.
 Main Functions
 
 - **graph_distance_similarity()** – computes distance-based similarity.
-- **common_neighbors()** – counts shared neighbors between nodes.
+- **common_neighbors_similarity()** – counts shared neighbors between nodes.
 - **jaccard_similarity()** – Jaccard similarity of neighbor sets.
-- **adamic_adar()** – Adamic/Adar similarity measure.
-- **preferential_attachment()** – preferential attachment similarity.
+- **adamic_adar_similarity()** – Adamic/Adar similarity measure.
+- **preferential_attachment_similarity()** – preferential attachment similarity.
 
 Output
 
@@ -209,40 +271,42 @@ Output
 
 ---
 
-## prediction/training.py
+## src/prediction/training.py
 
 Purpose
 
-Determine the optimal similarity threshold (RX).
+Train similarity-based link prediction rules by identifying similarity score
+ranges that maximize Balanced Accuracy.
 
 Main Functions
 
-- train_threshold()
+- `generate_similarity_ranges()` – generates candidate similarity intervals.
+- `find_best_single_range()` – selects the best initial interval.
+- `improve_range_set()` – iteratively refines the selected range set.
+- `train_similarity_measure()` – executes the complete training procedure.
 
-Output
-
-- Optimal threshold
-- Training accuracy
+The training procedure can use multiple non-overlapping similarity intervals,
+with the maximum number controlled by `MAX_INTERVALS`.
 
 ---
 
-## prediction/evaluation.py
+## src/prediction/evaluation.py
 
 Purpose
 
-Evaluate prediction performance.
+Compute the performance metrics used to evaluate the link prediction
+framework.
 
 Main Functions
 
-- **compute_tpr()** – computes true positive rate.
-- **compute_tnr()** – computes true negative rate.
-- **compute_accuracy()** – computes overall accuracy.
-- **rank_similarity_measures()** – ranks similarity metrics.
-
-Output
-
-- Accuracy
-- Ranking
+- `compute_lambda()` – computes the positive-edge proportion in the candidate
+  population.
+- `compute_tpr()` – computes the True Positive Rate.
+- `compute_tnr()` – computes the True Negative Rate.
+- `compute_precision()` – computes Precision.
+- `compute_recall()` – computes Recall.
+- `compute_accuracy()` – computes Accuracy.
+- `compute_balanced_accuracy()` – computes Balanced Accuracy.
 
 ---
 
