@@ -9,9 +9,6 @@ The objective is to analyze the StackOverflow Temporal Network, study its tempor
 Implementation language:
 - Python 3.x
 
-Development Environment:
-- Visual Studio Code
-
 Main Libraries:
 - pandas
 - numpy
@@ -100,7 +97,7 @@ Load the StackOverflow temporal dataset from disk.
 
 Main Functions
 
-- load_dataset()
+- **load_dataset(file_path)** – loads the StackOverflow temporal dataset into a pandas DataFrame.
 
 Input
 
@@ -120,9 +117,9 @@ Partition the complete temporal interval into N equal time periods and construct
 
 Main Functions
 
-- compute_time_periods()
-- partition_edges()
-- create_temporal_graphs()
+- **compute_time_periods()** – calculates temporal partition boundaries.
+- **partition_edges()** – splits edges into temporal slices.
+- **create_temporal_graphs()** – builds graph objects for each time period.
 
 Input
 
@@ -143,9 +140,9 @@ Compute basic graph statistics for every temporal graph.
 
 Main Functions
 
-- number_of_nodes()
-- number_of_edges()
-- graph_evolution()
+- **number_of_nodes()** – returns the node count for a graph.
+- **number_of_edges()** – returns the edge count for a graph.
+- **graph_evolution()** – tracks graph changes over time.
 
 Output
 
@@ -162,11 +159,11 @@ Compute node centrality measures.
 
 Main Functions
 
-- compute_degree()
-- compute_closeness()
-- compute_betweenness()
-- compute_eigenvector()
-- compute_katz()
+- **compute_degree()** – calculates degree centrality.
+- **compute_closeness()** – calculates closeness centrality.
+- **compute_betweenness()** – calculates betweenness centrality.
+- **compute_eigenvector()** – calculates eigenvector centrality.
+- **compute_katz()** – calculates Katz centrality.
 
 Output
 
@@ -183,11 +180,11 @@ Compute similarity matrices for node pairs.
 
 Main Functions
 
-- graph_distance_similarity()
-- common_neighbors()
-- jaccard_similarity()
-- adamic_adar()
-- preferential_attachment()
+- **graph_distance_similarity()** – computes distance-based similarity.
+- **common_neighbors()** – counts shared neighbors between nodes.
+- **jaccard_similarity()** – Jaccard similarity of neighbor sets.
+- **adamic_adar()** – Adamic/Adar similarity measure.
+- **preferential_attachment()** – preferential attachment similarity.
 
 Output
 
@@ -237,10 +234,10 @@ Evaluate prediction performance.
 
 Main Functions
 
-- compute_tpr()
-- compute_tnr()
-- compute_accuracy()
-- rank_similarity_measures()
+- **compute_tpr()** – computes true positive rate.
+- **compute_tnr()** – computes true negative rate.
+- **compute_accuracy()** – computes overall accuracy.
+- **rank_similarity_measures()** – ranks similarity metrics.
 
 Output
 
@@ -257,9 +254,9 @@ Generate every figure required by the assignment.
 
 Main Functions
 
-- plot_graph_evolution()
-- plot_histograms()
-- plot_accuracy()
+- **plot_graph_evolution()** – visualizes graph evolution over time.
+- **plot_histograms()** – creates histograms of measures.
+- **plot_accuracy()** – plots accuracy across thresholds.
 
 Output
 
